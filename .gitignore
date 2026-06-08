@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Environment (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+build/
+lib/
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Capacitor / Android
+apps/web/android/app/google-services.json
+apps/web/android/.gradle/
+apps/web/android/app/build/
+apps/web/android/build/
+apps/web/android/local.properties
+apps/web/android/captures/
+apps/web/android/.cxx/
+
+# Testing / coverage
+coverage/

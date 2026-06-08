@@ -1,0 +1,125 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Вспомогательная функция: Проверяет, вошел ли пользователь в систему
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Вспомогательная функция: Получает роль пользователя из его документа в коллекции 'users'
+    function role() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    // Вспомогательная функция: Проверяет, является ли пользователь Администратором
+    function isAdmin() {
+      return role() == 'Admin';
+    }
+
+    // Вспомогательная функция: Проверяет, является ли пользователь Модератором
+    function isModerator() {
+      return role() == 'Moderator';
+    }
+
+    // Правила для коллекции пользователей 'users'
+    match /users/{userId} {
+      // Любой авторизованный пользователь может читать чужие профили (например, для контактов)
+      allow read: if signedIn();
+      // Создать профиль может только сам пользователь при первой регистрации
+      allow create: if signedIn() && request.auth.uid == userId;
+      // Обновлять профиль может сам пользователь или Администратор
+      allow update: if signedIn() && (request.auth.uid == userId || isAdmin());
+      // Удалять профили имеет право только Администратор
+      allow delete: if isAdmin();
+    }
+
+    // Правила для постов новостной ленты 'posts'
+    match /posts/{postId} {
+      // Ленту постов могут читать все (даже неавторизованные гости)
+      allow read: if true;
+      // Создавать посты могут любые авторизованные студенты
+      allow create: if signedIn();
+      // Обновлять пост может автор поста, модератор или админ.
+      // Также разрешено обновление, если изменяются ТОЛЬКО счетчики лайков, комментариев или закладок.
+      allow update: if signedIn() && (
+        request.auth.uid == resource.data.authorId ||
+        isModerator() ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'likedBy',
+          'likesCount',
+          'bookmarkedBy',
+          'bookmarksCount',
+          'commentsCount'
+        ])
+      );
+      // Удалять пост может автор, модератор или админ
+      allow delete: if signedIn() && (request.auth.uid == resource.data.authorId || isModerator() || isAdmin());
+
+      // Вложенные комментарии к постам
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if signedIn();
+        allow update, delete: if signedIn() && (request.auth.uid == resource.data.authorId || isModerator() || isAdmin());
+      }
+    }
+
+    // Правила для мероприятий 'events'
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if signedIn();
+      // Обновлять событие (например, список участников RSVP) может любой вошедший студент
+      allow update: if signedIn();
+      // Удалить событие может только организатор события или админ
+      allow delete: if signedIn() && (request.auth.uid == resource.data.organizerId || isAdmin());
+    }
+
+    // Правила для расписания 'schedules'
+    match /schedules/{groupId} {
+      // Читать расписание своей группы может любой студент
+      allow read: if signedIn();
+      // Редактировать расписание могут только Модераторы или Администраторы
+      allow create, update, delete: if signedIn() && (isModerator() || isAdmin());
+    }
+
+    // Правила для чатов мессенджера 'chats'
+    match /chats/{chatId} {
+      // Доступ к чату имеют только те пользователи, чьи ID записаны в массиве участников 'members'
+      allow read: if signedIn() && request.auth.uid in resource.data.members;
+      allow create: if signedIn() && request.auth.uid in request.resource.data.members;
+      allow update, delete: if signedIn() && request.auth.uid in resource.data.members;
+
+      // Правила для сообщений внутри конкретного чата
+      match /messages/{messageId} {
+        // Читать и писать сообщения могут только участники этого чата
+        allow read, create: if signedIn() && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.members;
+        // Изменять и удалять свои сообщения может только их отправитель
+        allow update, delete: if signedIn() && request.auth.uid == resource.data.senderId;
+      }
+    }
+
+    // Правила для WebRTC-звонков 'calls' (сигнальный трафик)
+    match /calls/{callId} {
+      // Участвовать в звонке и управлять им могут только звонящий (caller) или принимающий (callee)
+      allow read, create: if signedIn() && (
+        (request.resource.data.participants != null && request.auth.uid in request.resource.data.participants) ||
+        request.auth.uid == request.resource.data.callerId ||
+        request.auth.uid == request.resource.data.calleeId
+      );
+      allow update, delete: if signedIn() && (
+        (resource.data.participants != null && request.auth.uid in resource.data.participants) ||
+        request.auth.uid == resource.data.callerId ||
+        request.auth.uid == resource.data.calleeId
+      );
+    }
+
+    // Правила для уведомлений 'notifications'
+    match /notifications/{notificationId} {
+      // Свои уведомления может читать и обновлять только сам получатель
+      allow read, update: if signedIn() && request.auth.uid == resource.data.userId;
+      allow create: if signedIn();
+    }
+  }
+}
+

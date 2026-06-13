@@ -1,4 +1,37 @@
-# StudentHub — MVP
+# StudentHub — Student Social Network
+
+Campus social network MVP — feed, real-time chats, events, schedule, voice calls, admin panel.
+
+**Stack:** React · Vite · TypeScript · Tailwind · Firebase
+
+> Pet project / portfolio piece. Hybrid of Telegram + campus portal for students. Dark theme UI, role-based admin, Firestore security rules.
+
+## Screenshots
+
+<p align="center">
+  <img src="docs/screenshots/01-feed.png" width="260" alt="Feed"/>
+  <img src="docs/screenshots/02-chats.png" width="260" alt="Chats"/>
+  <img src="docs/screenshots/03-chat.png" width="260" alt="Chat"/>
+</p>
+<p align="center"><sub>Feed · Chats · Real-time messaging</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/04-events.png" width="260" alt="Events"/>
+  <img src="docs/screenshots/05-schedule.png" width="260" alt="Schedule"/>
+  <img src="docs/screenshots/06-profile.png" width="260" alt="Profile"/>
+</p>
+<p align="center"><sub>Events & RSVP · Group schedule · Profile</sub></p>
+
+<p align="center">
+  <img src="docs/screenshots/07-admin-moderation.png" width="260" alt="Admin moderation"/>
+  <img src="docs/screenshots/08-admin-users.png" width="260" alt="Admin users"/>
+  <img src="docs/screenshots/09-voice-call.png" width="260" alt="Voice call"/>
+</p>
+<p align="center"><sub>Content moderation · Role management · Voice calls</sub></p>
+
+---
+
+## StudentHub — RU
 
 Мини‑соцсеть для студентов (гибрид Telegram + кампус‑портал). Стек: React + Vite + TypeScript + Tailwind + Firebase.
 
